@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "eslint": "^7.30.0",
     "phaser": "^3.55.2"
   }
 }

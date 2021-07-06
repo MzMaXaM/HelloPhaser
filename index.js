@@ -3,6 +3,7 @@ let lives = 3
 let scoreText
 let liveText
 let gameOver = false
+let isWalking= false
 const textColour = '#ADFF2F'
 const config = {
     type: Phaser.AUTO,
@@ -33,6 +34,11 @@ function preload (){
     this.load.image('restartBtn', './assets/restart.png')
     this.load.atlas('cutie','./assets/cutie_red_hed.png',
         './assets/cutie_red_hed_atlas.json')
+
+
+    this.load.audio('walkSound', './assets/cute-walk.mp3')
+    this.load.audio('pickStar', './assets/star.mp3')
+    this.load.audio('bombCollide', './assets/bomb.mp3')
 }
 
 function create (){
@@ -42,6 +48,25 @@ function create (){
     platforms.create(750, 400, 'platform')
     platforms.create(200, 285, 'platform')
     platforms.create(800, 225, 'platform')
+
+    walkSound = this.sound.add('walkSound',{
+        mute: false,
+        volume: 0.5,
+        rate: 0.7,
+        loop: true
+    })
+    pickStar = this.sound.add('pickStar',{
+        mute: false,
+        volume: 1,
+        rate: 1.8,
+        loop: false
+    })
+    bombCollide = this.sound.add('bombCollide',{
+        mute: false,
+        volume: 2.5,
+        rate: 1.5,
+        loop: false
+    })
 
     restartBtn = this.add.image(800, 565, 'restartBtn')
     restartBtn.alpha = 0
@@ -62,17 +87,19 @@ function create (){
             prefix: "idle",
             start: 1,
             end: 8,
-            zeroPad: 1
+            zeroPad: 1,
+            repeat: -1
         })
     })
     this.anims.create({
         key: "walk",
-        frameRate: 7,
+        frameRate: 10,
         frames: this.anims.generateFrameNames("cutie", {
             prefix: "walk",
             start: 1,
             end: 10,
-            zeroPad: 1
+            zeroPad: 1,
+            repeat: -1
         })
     })
     this.anims.create({
@@ -126,23 +153,35 @@ function update (){
         player.setVelocityX(0)
         restartBtn.alpha = 1
         restartBtn.angle-=2
+        walkSound.stop()
+        isWalking=false
         return
     }
     if (cursors.left.isDown){
         player.setVelocityX(-180)
+        if (player.body.touching.down&&!isWalking){
+            walkSound.play()
+            isWalking=true}
         if (player.body.touching.down){player.anims.play('walk', true)}
         player.setFlipX(true)
         player.setBodySize(20, 40)
         } else if (cursors.right.isDown){
         player.setVelocityX(180)
+        if (player.body.touching.down&&!isWalking){
+            walkSound.play()
+            isWalking=true}
         if (player.body.touching.down){player.anims.play('walk', true)}
         player.setFlipX(false)
         } else{
-        player.setVelocityX(0)
-        player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
+            walkSound.stop()
+            isWalking=false
+            player.setVelocityX(0)
+            player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
         }
 
     if (cursors.up.isDown && player.body.touching.down){
+        walkSound.stop()
+        isWalking=false
         player.anims.play('jump', false)
         player.setVelocityY(-320)
         }else if (cursors.down.isDown ){
@@ -172,6 +211,7 @@ function restartGame(){
 
 function collectStar (player, star){
     star.disableBody(true, true)
+    pickStar.play()
     score ++
     scoreText.setText('Score: ' + score)
     if (stars.countActive(true) === 0){
@@ -207,6 +247,7 @@ function checkPlayerLife(setLife){
 
 function hitBomb (player, bomb){
     bomb.disableBody(true, true)
+    bombCollide.play()
     checkPlayerLife(-1)
     }
     
