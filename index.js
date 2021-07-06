@@ -2,6 +2,7 @@ let score = 0
 let lives = 3
 let scoreText
 let liveText
+let muted = false
 let gameOver = false
 let isWalking= false
 const textColour = '#ADFF2F'
@@ -12,8 +13,8 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 400 },
-            debug: false
+            gravity: { y: 300 },
+            debug: true
             },
         },
     scene: {
@@ -31,10 +32,12 @@ function preload (){
     this.load.image('ground', './assets/ground.png')//800*128
     this.load.image('star', './assets/star.png')
     this.load.image('bomb', './assets/bomb.png')
+    this.load.image('muteBtn', './assets/sound.png')
     this.load.image('restartBtn', './assets/restart.png')
     this.load.atlas('cutie','./assets/cutie_red_hed.png',
         './assets/cutie_red_hed_atlas.json')
-
+    this.load.atlas('kboom','./assets/kaboom.png',
+        './assets/kaboom_atlas.json')
 
     this.load.audio('walkSound', './assets/cute-walk.mp3')
     this.load.audio('pickStar', './assets/star.mp3')
@@ -57,13 +60,13 @@ function create (){
     })
     pickStar = this.sound.add('pickStar',{
         mute: false,
-        volume: 1,
-        rate: 1.8,
+        volume: 0.8,
+        rate: 2,
         loop: false
     })
     bombCollide = this.sound.add('bombCollide',{
         mute: false,
-        volume: 2.5,
+        volume: 5,
         rate: 1.5,
         loop: false
     })
@@ -72,14 +75,19 @@ function create (){
     restartBtn.alpha = 0
     restartBtn.setInteractive()
     restartBtn.on('pointerdown', restartGame)
-    
+    soundBtn = this.add.image(700, 565, 'muteBtn')
+    soundBtn.alpha = 0.5
+    soundBtn.setInteractive()
+    soundBtn.on('pointerdown', muteGame)
+    //----------------player------------------------
     player = this.physics.add.sprite(150, 450, 'cutie')
     player.setBounce(0.3)
+    player.setGravityY(350)
     player.setDepth(1)
     player.setBodySize(20, 40)
     player.setCollideWorldBounds(true)
 
-
+    // player animations
     this.anims.create({
         key: "idle",
         frameRate: 7,
@@ -122,11 +130,13 @@ function create (){
             zeroPad: 1
         })
     })
-
-
     this.physics.add.collider(player, platforms)
 
+
+    //imputs
     cursors = this.input.keyboard.createCursorKeys()
+
+    //creating the stars
     stars = this.physics.add.group({
         key: 'star',
         repeat: 12,
@@ -134,20 +144,32 @@ function create (){
         })
     stars.children.iterate(function (child) {
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.6))
+        child.setBodySize(20, 40, false)
+        // child.setGravityY(-350)
         })
     this.physics.add.collider(stars, platforms)
     this.physics.add.overlap(player, stars, collectStar, null, this)
+    //  creating Gui text
     scoreText = this.add.text(400, 540, 'Score: 0', {
             fontFamily: 'Viaoda Libre, cursive',
             fontSize: '48px', color: textColour})
     liveText = this.add.text(150, 540, 'Lives: 3', {
             fontFamily: 'Viaoda Libre, cursive',
             fontSize: '48px', color: textColour})
+        // creating the bombs
     bombs = this.physics.add.group()
     this.physics.add.collider(bombs, platforms)
     this.physics.add.collider(player, bombs, hitBomb, null, this)
-
-    }
+    this.anims.create({
+        key: "kboom",
+        frameRate: 8,
+        frames: this.anims.generateFrameNames("kboom", {
+            start: 4,
+            end: 9,
+            zeroPad: 1
+        })
+    })
+}
 function update (){
     if (gameOver){
         player.setVelocityX(0)
@@ -177,21 +199,37 @@ function update (){
             isWalking=false
             player.setVelocityX(0)
             player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
-        }
+    }
 
     if (cursors.up.isDown && player.body.touching.down){
         walkSound.stop()
         isWalking=false
         player.anims.play('jump', false)
-        player.setVelocityY(-320)
+        player.setVelocityY(-420)
         }else if (cursors.down.isDown ){
         player.setVelocityY(450)
         }
     if (player.y >= 580){
         checkPlayerLife(-1)
-        if (lives > 0) {player.setVelocityY(-450)}
-        }
+        if (lives > 0) {player.setVelocityY(-500)}
     }
+}
+
+function muteGame(){
+    muted?(
+        soundBtn.alpha = 0.5,
+        walkSound.mute=false,
+        pickStar.mute=false,
+        pickStar.mute=false,
+        bombCollide.mute=false,
+        muted=false):(
+        soundBtn.alpha = 1,
+        walkSound.mute=true,
+        pickStar.mute=true,
+        pickStar.mute=true,
+        bombCollide.mute=true,
+        muted=true)
+}
 
 function restartGame(){
     player.x=150
@@ -223,8 +261,8 @@ function collectStar (player, star){
         bomb.setBounce(1)
         bomb.setCollideWorldBounds(true)
         bomb.setVelocity(Phaser.Math.Between(150, 200), 20)
-        }
     }
+}
 
 function checkPlayerLife(setLife){
     lives = lives + setLife
@@ -240,14 +278,24 @@ function checkPlayerLife(setLife){
         if (bombs.countActive(true) > 0){
             bombs.children.iterate(function (child) {
                 child.disableBody(true, true)
+                // child.anims.play('kboom', false)
             })
         }
     }
 }
 
 function hitBomb (player, bomb){
-    bomb.disableBody(true, true)
+    bomb.setVelocityX(0)
+    bomb.setVelocityY(-100)
+    bomb.anims.play('kboom', false)
     bombCollide.play()
-    checkPlayerLife(-1)
-    }
+    this.time.addEvent({
+        delay: 500,
+        callback: ()=>{
+            bomb.disableBody(true, true)
+            checkPlayerLife(-1)
+        },
+        loop: false
+    })
+}
     
