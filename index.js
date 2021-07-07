@@ -2,9 +2,11 @@ let score = 0
 let lives = 3
 let scoreText
 let liveText
+let highScoreText
 let muted = false
 let gameOver = false
 let isWalking= false
+let highScore
 const textColour = '#ADFF2F'
 const config = {
     type: Phaser.AUTO,
@@ -14,7 +16,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: true
+            debug: false
             },
         },
     scene: {
@@ -45,13 +47,20 @@ function preload (){
 }
 
 function create (){
+    //-------------localStorage :D------------------
+    if(!localStorage.getItem('helloPhaser')) {
+        localStorage.setItem('helloPhaser', 0)
+      } else {
+        highScore = localStorage.getItem('helloPhaser')
+      }
+//------------platforms---------------------------
     this.add.image(500, 300, 'backGround')
     platforms = this.physics.add.staticGroup()
     platforms.create(500, 565, 'ground')
     platforms.create(750, 400, 'platform')
     platforms.create(200, 285, 'platform')
     platforms.create(800, 225, 'platform')
-
+//--------------------sounds----------------------------
     walkSound = this.sound.add('walkSound',{
         mute: false,
         volume: 0.5,
@@ -70,12 +79,12 @@ function create (){
         rate: 1.5,
         loop: false
     })
-
-    restartBtn = this.add.image(800, 565, 'restartBtn')
+//-------------------------Buttons----------------------------
+    restartBtn = this.add.image(850, 565, 'restartBtn')
     restartBtn.alpha = 0
     restartBtn.setInteractive()
     restartBtn.on('pointerdown', restartGame)
-    soundBtn = this.add.image(700, 565, 'muteBtn')
+    soundBtn = this.add.image(750, 565, 'muteBtn')
     soundBtn.alpha = 0.5
     soundBtn.setInteractive()
     soundBtn.on('pointerdown', muteGame)
@@ -150,10 +159,13 @@ function create (){
     this.physics.add.collider(stars, platforms)
     this.physics.add.overlap(player, stars, collectStar, null, this)
     //  creating Gui text
-    scoreText = this.add.text(400, 540, 'Score: 0', {
+    highScoreText = this.add.text(550, 540, ('HI: ' + highScore), {
+        fontFamily: 'Viaoda Libre, cursive',
+        fontSize: '48px', color: textColour})
+    scoreText = this.add.text(350, 540, ('Score: '+ score), {
             fontFamily: 'Viaoda Libre, cursive',
             fontSize: '48px', color: textColour})
-    liveText = this.add.text(150, 540, 'Lives: 3', {
+    liveText = this.add.text(150, 540, ('Lives: '+ lives), {
             fontFamily: 'Viaoda Libre, cursive',
             fontSize: '48px', color: textColour})
         // creating the bombs
@@ -170,6 +182,7 @@ function create (){
         })
     })
 }
+
 function update (){
     if (gameOver){
         player.setVelocityX(0)
@@ -207,7 +220,7 @@ function update (){
         player.anims.play('jump', false)
         player.setVelocityY(-420)
         }else if (cursors.down.isDown ){
-        player.setVelocityY(450)
+        player.setVelocityY(480)
         }
     if (player.y >= 580){
         checkPlayerLife(-1)
@@ -252,6 +265,10 @@ function collectStar (player, star){
     pickStar.play()
     score ++
     scoreText.setText('Score: ' + score)
+    if(highScore<score){
+        highScore=score
+        highScoreText.setText('HI: '+ highScore)
+    }
     if (stars.countActive(true) === 0){
         stars.children.iterate(function (child) {
             child.enableBody(true, child.x, 0, true, true)
@@ -267,7 +284,10 @@ function collectStar (player, star){
 function checkPlayerLife(setLife){
     lives = lives + setLife
     liveText.setText('Lives: ' + lives)
+    if (lives<0){lives=0}
     if (lives == 0){
+        if (highScore>localStorage.getItem('helloPhaser')){
+        localStorage.setItem('helloPhaser', highScore)}
         this.player.anims.play('dead',false)
         gameOver = true
         if (stars.countActive(true) > 0){
