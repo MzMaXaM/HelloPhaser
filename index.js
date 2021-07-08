@@ -1,12 +1,14 @@
 let score = 0
 let lives = 3
+let highScore
 let scoreText
 let liveText
 let highScoreText
+const playerXkey = 350
+const playerYkey = 450
 let muted = false
 let gameOver = false
-let isWalking= false
-let highScore
+let isWalking = false
 const textColour = '#ADFF2F'
 const config = {
     type: Phaser.AUTO,
@@ -16,7 +18,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false
+            debug: true
             },
         },
     scene: {
@@ -27,7 +29,7 @@ const config = {
 }
 
 var game = new Phaser.Game(config);
-
+//======================================PRELOAD===================================//
 function preload (){
     this.load.image('backGround', './assets/sky.png')
     this.load.image('platform', './assets/platform.png')
@@ -36,24 +38,28 @@ function preload (){
     this.load.image('bomb', './assets/bomb.png')
     this.load.image('muteBtn', './assets/sound.png')
     this.load.image('restartBtn', './assets/restart.png')
+    this.load.image('arrowBtn', './assets/arrowUp.png')
+//------------------------------------
     this.load.atlas('cutie','./assets/cutie_red_hed.png',
         './assets/cutie_red_hed_atlas.json')
     this.load.atlas('kboom','./assets/kaboom.png',
         './assets/kaboom_atlas.json')
-
+//--------------Sounds---------------------
     this.load.audio('walkSound', './assets/cute-walk.mp3')
     this.load.audio('pickStar', './assets/star.mp3')
     this.load.audio('bombCollide', './assets/bomb.mp3')
 }
-
+//=================================CREATE===========================================//
 function create (){
-    //-------------localStorage :D------------------
+    //-------------check the localStorage ------------------
     if(!localStorage.getItem('helloPhaser')) {
         localStorage.setItem('helloPhaser', 0)
       } else {
         highScore = localStorage.getItem('helloPhaser')
       }
-//------------platforms---------------------------
+
+    this.input.setDefaultCursor('url(assets/arrow.png), pointer')
+//------------creating platforms---------------------------
     this.add.image(500, 300, 'backGround')
     platforms = this.physics.add.staticGroup()
     platforms.create(500, 565, 'ground')
@@ -82,14 +88,39 @@ function create (){
 //-------------------------Buttons----------------------------
     restartBtn = this.add.image(850, 565, 'restartBtn')
     restartBtn.alpha = 0
-    restartBtn.setInteractive()
+    restartBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     restartBtn.on('pointerdown', restartGame)
+
     soundBtn = this.add.image(750, 565, 'muteBtn')
     soundBtn.alpha = 0.5
-    soundBtn.setInteractive()
+    soundBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     soundBtn.on('pointerdown', muteGame)
+                //Arrow Buttons
+    leftBtn = this.add.image(25, 550, 'arrowBtn')
+    leftBtn.alpha = 0.6
+    leftBtn.angle = -90
+    leftBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+    leftBtn.on('pointerdown', leftArrow)
+
+    rightBtn = this.add.image(75, 570, 'arrowBtn')
+    rightBtn.alpha = 0.6
+    rightBtn.angle = 90
+    rightBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+    rightBtn.on('pointerdown', rightArrow)
+
+    upBtn = this.add.image(975, 550, 'arrowBtn')
+    upBtn.alpha = 0.6
+    // upBtn.angle = 90
+    upBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+    upBtn.on('pointerdown', upArrow)
+
+    downBtn = this.add.image(925, 570, 'arrowBtn')
+    downBtn.alpha = 0.6
+    downBtn.angle = 180
+    downBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+    downBtn.on('pointerdown', downArrow)
     //----------------player------------------------
-    player = this.physics.add.sprite(150, 450, 'cutie')
+    player = this.physics.add.sprite(playerXkey, playerYkey, 'cutie')
     player.setBounce(0.3)
     player.setGravityY(350)
     player.setDepth(1)
@@ -154,7 +185,6 @@ function create (){
     stars.children.iterate(function (child) {
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.6))
         child.setBodySize(20, 40, false)
-        // child.setGravityY(-350)
         })
     this.physics.add.collider(stars, platforms)
     this.physics.add.overlap(player, stars, collectStar, null, this)
@@ -168,7 +198,8 @@ function create (){
     liveText = this.add.text(150, 540, ('Lives: '+ lives), {
             fontFamily: 'Viaoda Libre, cursive',
             fontSize: '48px', color: textColour})
-        // creating the bombs
+    //---------------------------------------
+    // creating the bombs
     bombs = this.physics.add.group()
     this.physics.add.collider(bombs, platforms)
     this.physics.add.collider(player, bombs, hitBomb, null, this)
@@ -182,7 +213,7 @@ function create (){
         })
     })
 }
-
+//==============================================UPDATE=======================================//
 function update (){
     if (gameOver){
         player.setVelocityX(0)
@@ -220,14 +251,30 @@ function update (){
         player.anims.play('jump', false)
         player.setVelocityY(-420)
         }else if (cursors.down.isDown ){
-        player.setVelocityY(480)
-        }
+        player.setVelocityY(480)}
     if (player.y >= 580){
         checkPlayerLife(-1)
-        if (lives > 0) {player.setVelocityY(-500)}
+        if (lives > 0) {
+            player.x=playerXkey
+            player.y=playerYkey
+        }
     }
 }
-
+//===========================================================================================//
+//--------------------------Control Functions---------------------------------------------//
+function leftArrow(){
+console.log('Left Arrow ;)')
+}
+function rightArrow(){
+console.log('Right Arrow ;)')
+}
+function downArrow(){
+console.log('Down Arrow ;)')
+}
+function upArrow(){
+console.log('Jump Arrow ;)')
+}
+//---------------------------Other Functions------------------------------------------//
 function muteGame(){
     muted?(
         soundBtn.alpha = 0.5,
@@ -245,8 +292,8 @@ function muteGame(){
 }
 
 function restartGame(){
-    player.x=150
-    player.y=450
+    player.x=playerXkey
+    player.y=playerYkey
     restartBtn.alpha = 0
     score = 0
     scoreText.setText('Score: ' + score)
@@ -276,6 +323,7 @@ function collectStar (player, star){
         var x = (player.x < 500) ? Phaser.Math.Between(600, 700) : Phaser.Math.Between(100, 400)
         var bomb = bombs.create(x, 16, 'bomb')
         bomb.setBounce(1)
+        bomb.body.setCircle(6)
         bomb.setCollideWorldBounds(true)
         bomb.setVelocity(Phaser.Math.Between(150, 200), 20)
     }
@@ -298,7 +346,6 @@ function checkPlayerLife(setLife){
         if (bombs.countActive(true) > 0){
             bombs.children.iterate(function (child) {
                 child.disableBody(true, true)
-                // child.anims.play('kboom', false)
             })
         }
     }
@@ -306,7 +353,7 @@ function checkPlayerLife(setLife){
 
 function hitBomb (player, bomb){
     bomb.setVelocityX(0)
-    bomb.setVelocityY(-100)
+    bomb.setVelocityY(-300)
     bomb.anims.play('kboom', false)
     bombCollide.play()
     this.time.addEvent({
