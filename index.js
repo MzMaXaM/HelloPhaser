@@ -18,7 +18,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: true
+            debug: false
             },
         },
     scene: {
@@ -86,7 +86,7 @@ function create (){
         loop: false
     })
 //-------------------------Buttons----------------------------
-    restartBtn = this.add.image(850, 565, 'restartBtn')
+    restartBtn = this.add.image(800, 565, 'restartBtn')
     restartBtn.alpha = 0
     restartBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     restartBtn.on('pointerdown', restartGame)
@@ -96,25 +96,25 @@ function create (){
     soundBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     soundBtn.on('pointerdown', muteGame)
                 //Arrow Buttons
-    leftBtn = this.add.image(25, 550, 'arrowBtn')
+    leftBtn = this.add.image(40, 500, 'arrowBtn')
     leftBtn.alpha = 0.6
     leftBtn.angle = -90
     leftBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     leftBtn.on('pointerdown', leftArrow)
 
-    rightBtn = this.add.image(75, 570, 'arrowBtn')
+    rightBtn = this.add.image(100, 560, 'arrowBtn')
     rightBtn.alpha = 0.6
     rightBtn.angle = 90
     rightBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     rightBtn.on('pointerdown', rightArrow)
 
-    upBtn = this.add.image(975, 550, 'arrowBtn')
+    upBtn = this.add.image(960, 500, 'arrowBtn')
     upBtn.alpha = 0.6
     // upBtn.angle = 90
     upBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     upBtn.on('pointerdown', upArrow)
 
-    downBtn = this.add.image(925, 570, 'arrowBtn')
+    downBtn = this.add.image(900, 560, 'arrowBtn')
     downBtn.alpha = 0.6
     downBtn.angle = 180
     downBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
@@ -216,6 +216,10 @@ function create (){
 //==============================================UPDATE=======================================//
 function update (){
     if (gameOver){
+        leftBtn.alpha = 0
+        rightBtn.alpha = 0
+        upBtn.alpha = 0
+        downBtn.alpha = 0
         player.setVelocityX(0)
         restartBtn.alpha = 1
         restartBtn.angle-=2
@@ -223,35 +227,16 @@ function update (){
         isWalking=false
         return
     }
-    if (cursors.left.isDown){
-        player.setVelocityX(-180)
-        if (player.body.touching.down&&!isWalking){
-            walkSound.play()
-            isWalking=true}
-        if (player.body.touching.down){player.anims.play('walk', true)}
-        player.setFlipX(true)
-        player.setBodySize(20, 40)
-        } else if (cursors.right.isDown){
-        player.setVelocityX(180)
-        if (player.body.touching.down&&!isWalking){
-            walkSound.play()
-            isWalking=true}
-        if (player.body.touching.down){player.anims.play('walk', true)}
-        player.setFlipX(false)
-        } else{
-            walkSound.stop()
-            isWalking=false
-            player.setVelocityX(0)
-            player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
-    }
+    cursors.left.isDown?leftArrow():cursors.right.isDown?rightArrow():walkStop()
+    
+    if (cursors.up.isDown && player.body.touching.down){upArrow()}
+    if (cursors.down.isDown && !player.body.touching.down){downArrow()}
 
-    if (cursors.up.isDown && player.body.touching.down){
-        walkSound.stop()
-        isWalking=false
-        player.anims.play('jump', false)
-        player.setVelocityY(-420)
-        }else if (cursors.down.isDown ){
-        player.setVelocityY(480)}
+    cursors.left.isDown?leftBtn.alpha = 1:leftBtn.alpha = 0.6
+    cursors.right.isDown?rightBtn.alpha = 1:rightBtn.alpha = 0.6
+    cursors.up.isDown?upBtn.alpha = 1:upBtn.alpha = 0.6
+    cursors.down.isDown?downBtn.alpha = 1:downBtn.alpha = 0.6
+    
     if (player.y >= 580){
         checkPlayerLife(-1)
         if (lives > 0) {
@@ -263,16 +248,36 @@ function update (){
 //===========================================================================================//
 //--------------------------Control Functions---------------------------------------------//
 function leftArrow(){
-console.log('Left Arrow ;)')
+    player.setVelocityX(-180)
+    if (player.body.touching.down&&!isWalking){
+        walkSound.play()
+        isWalking=true}
+    if (player.body.touching.down){player.anims.play('walk', true)}
+    player.setFlipX(true)
+    player.setBodySize(20, 40)
 }
 function rightArrow(){
-console.log('Right Arrow ;)')
+    player.setVelocityX(180)
+    if (player.body.touching.down&&!isWalking){
+        walkSound.play()
+        isWalking=true}
+    if (player.body.touching.down){player.anims.play('walk', true)}
+    player.setFlipX(false)
 }
 function downArrow(){
-console.log('Down Arrow ;)')
+    player.setVelocityY(480)
 }
 function upArrow(){
-console.log('Jump Arrow ;)')
+    walkSound.stop()
+    isWalking=false
+    player.anims.play('jump', false)
+    player.setVelocityY(-430)
+}
+function walkStop(){
+    walkSound.stop()
+    isWalking=false
+    player.setVelocityX(0)
+    player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
 }
 //---------------------------Other Functions------------------------------------------//
 function muteGame(){
