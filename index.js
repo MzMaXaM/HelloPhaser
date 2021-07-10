@@ -4,12 +4,24 @@ let highScore
 let scoreText
 let liveText
 let highScoreText
-const playerXkey = 350
-const playerYkey = 450
 let muted = false
 let gameOver = false
 let isWalking = false
-const textColour = '#ADFF2F'
+
+const localKey = 'helloPhaser'
+const playerXkey = 350
+const playerYkey = 450
+const textColour = '#adff2f'
+
+//--------Controls
+let touchable = false
+let left = false
+let right = false
+let up = false
+let down = false
+
+//--------------------======================--------------------
+
 const config = {
     type: Phaser.AUTO,
     width: 1000,
@@ -29,6 +41,7 @@ const config = {
 }
 
 var game = new Phaser.Game(config);
+
 //======================================PRELOAD===================================//
 function preload (){
     this.load.image('backGround', './assets/sky.png')
@@ -49,16 +62,23 @@ function preload (){
     this.load.audio('pickStar', './assets/star.mp3')
     this.load.audio('bombCollide', './assets/bomb.mp3')
 }
+
+
 //=================================CREATE===========================================//
 function create (){
     //-------------check the localStorage ------------------
-    if(!localStorage.getItem('helloPhaser')) {
-        localStorage.setItem('helloPhaser', 0)
+    // if there is no localstore with our key
+    // then we will create one
+    if(!localStorage.getItem(localKey)) {
+        localStorage.setItem(localKey, 0)
       } else {
-        highScore = localStorage.getItem('helloPhaser')
+          //if there is one then well use it ;)
+        highScore = localStorage.getItem(localKey)
       }
 
+      //-----------change the cursor... just for fun
     this.input.setDefaultCursor('url(assets/arrow.png), pointer')
+
 //------------creating platforms---------------------------
     this.add.image(500, 300, 'backGround')
     platforms = this.physics.add.staticGroup()
@@ -66,6 +86,7 @@ function create (){
     platforms.create(750, 400, 'platform')
     platforms.create(200, 285, 'platform')
     platforms.create(800, 225, 'platform')
+
 //--------------------sounds----------------------------
     walkSound = this.sound.add('walkSound',{
         mute: false,
@@ -85,6 +106,8 @@ function create (){
         rate: 1.5,
         loop: false
     })
+
+
 //-------------------------Buttons----------------------------
     restartBtn = this.add.image(800, 565, 'restartBtn')
     restartBtn.alpha = 0
@@ -95,30 +118,42 @@ function create (){
     soundBtn.alpha = 0.5
     soundBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     soundBtn.on('pointerdown', muteGame)
-                //Arrow Buttons
-    leftBtn = this.add.image(40, 500, 'arrowBtn')
-    leftBtn.alpha = 0.6
-    leftBtn.angle = -90
-    leftBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
-    leftBtn.on('pointerdown', leftArrow)
+    //=====================================================================
+                //Arrow Buttons will show up only if its a touchable device
+                //otherwise player can use keyboard arrows
+    if (game.device.input.touch){ touchable=true }
+    if (touchable){
+        leftBtn = this.add.image(40, 500, 'arrowBtn')
+        leftBtn.alpha = 0.6
+        leftBtn.angle = -90
+        leftBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+        leftBtn.on('pointerdown', ()=>left=true)
+        leftBtn.on('pointerup', ()=>left=false)
 
-    rightBtn = this.add.image(100, 560, 'arrowBtn')
-    rightBtn.alpha = 0.6
-    rightBtn.angle = 90
-    rightBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
-    rightBtn.on('pointerdown', rightArrow)
+        rightBtn = this.add.image(100, 560, 'arrowBtn')
+        rightBtn.alpha = 0.6
+        rightBtn.angle = 90
+        rightBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+        rightBtn.on('pointerdown', ()=>right=true)
+        rightBtn.on('pointerup', ()=>right=false)
 
-    upBtn = this.add.image(960, 500, 'arrowBtn')
-    upBtn.alpha = 0.6
-    // upBtn.angle = 90
-    upBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
-    upBtn.on('pointerdown', upArrow)
+        upBtn = this.add.image(960, 500, 'arrowBtn')
+        upBtn.alpha = 0.6
+        // upBtn.angle = 0
+        upBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+        upBtn.on('pointerdown', ()=>up=true)
+        upBtn.on('pointerup', ()=>up=false)
 
-    downBtn = this.add.image(900, 560, 'arrowBtn')
-    downBtn.alpha = 0.6
-    downBtn.angle = 180
-    downBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
-    downBtn.on('pointerdown', downArrow)
+        downBtn = this.add.image(900, 560, 'arrowBtn')
+        downBtn.alpha = 0.6
+        downBtn.angle = 180
+        downBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+        downBtn.on('pointerdown', ()=>down=true)
+        downBtn.on('pointerup', ()=>down=false)
+    }else{
+            // keyboard imputs
+        cursors = this.input.keyboard.createCursorKeys()
+    }
     //----------------player------------------------
     player = this.physics.add.sprite(playerXkey, playerYkey, 'cutie')
     player.setBounce(0.3)
@@ -173,9 +208,6 @@ function create (){
     this.physics.add.collider(player, platforms)
 
 
-    //imputs
-    cursors = this.input.keyboard.createCursorKeys()
-
     //creating the stars
     stars = this.physics.add.group({
         key: 'star',
@@ -188,16 +220,18 @@ function create (){
         })
     this.physics.add.collider(stars, platforms)
     this.physics.add.overlap(player, stars, collectStar, null, this)
+
     //  creating Gui text
     highScoreText = this.add.text(550, 540, ('HI: ' + highScore), {
         fontFamily: 'Viaoda Libre, cursive',
-        fontSize: '48px', color: textColour})
-    scoreText = this.add.text(350, 540, ('Score: '+ score), {
+        fontSize: '40px', color: textColour})
+    scoreText = this.add.text(330, 540, ('Score: '+ score), {
             fontFamily: 'Viaoda Libre, cursive',
-            fontSize: '48px', color: textColour})
+            fontSize: '40px', color: textColour})
     liveText = this.add.text(150, 540, ('Lives: '+ lives), {
             fontFamily: 'Viaoda Libre, cursive',
-            fontSize: '48px', color: textColour})
+            fontSize: '40px', color: textColour})
+
     //---------------------------------------
     // creating the bombs
     bombs = this.physics.add.group()
@@ -213,13 +247,17 @@ function create (){
         })
     })
 }
+
+
 //==============================================UPDATE=======================================//
 function update (){
     if (gameOver){
-        leftBtn.alpha = 0
-        rightBtn.alpha = 0
-        upBtn.alpha = 0
-        downBtn.alpha = 0
+        if (touchable){
+            leftBtn.alpha = 0
+            rightBtn.alpha = 0
+            upBtn.alpha = 0
+            downBtn.alpha = 0
+        }
         player.setVelocityX(0)
         restartBtn.alpha = 1
         restartBtn.angle-=2
@@ -227,15 +265,31 @@ function update (){
         isWalking=false
         return
     }
-    cursors.left.isDown?leftArrow():cursors.right.isDown?rightArrow():walkStop()
-    
-    if (cursors.up.isDown && player.body.touching.down){upArrow()}
-    if (cursors.down.isDown && !player.body.touching.down){downArrow()}
+    if (!touchable){
+        if (cursors.left.isDown) {left=true}
+        if (cursors.left.isUp) {left=false}
+        if (cursors.right.isDown) {right=true}
+        if (cursors.right.isUp) {right=false}
 
-    cursors.left.isDown?leftBtn.alpha = 1:leftBtn.alpha = 0.6
-    cursors.right.isDown?rightBtn.alpha = 1:rightBtn.alpha = 0.6
-    cursors.up.isDown?upBtn.alpha = 1:upBtn.alpha = 0.6
-    cursors.down.isDown?downBtn.alpha = 1:downBtn.alpha = 0.6
+        if (cursors.up.isDown) {up=true}
+        if (cursors.up.isUp) {up=false}
+        if (cursors.down.isDown) {down=true}
+        if (cursors.down.isUp) {down=false}
+    }
+
+    left ? leftArrow():
+        right ? rightArrow():
+            walkStop()
+
+    if (up && player.body.touching.down){upArrow()}
+    if (down && !player.body.touching.down){downArrow()}
+
+    if (touchable){
+        left?leftBtn.alpha = 1:leftBtn.alpha = 0.6
+        right?rightBtn.alpha = 1:rightBtn.alpha = 0.6
+        up?upBtn.alpha = 1:upBtn.alpha = 0.6
+        down?downBtn.alpha = 1:downBtn.alpha = 0.6
+    }
     
     if (player.y >= 580){
         checkPlayerLife(-1)
@@ -254,6 +308,7 @@ function leftArrow(){
         isWalking=true}
     if (player.body.touching.down){player.anims.play('walk', true)}
     player.setFlipX(true)
+    //fixing the colider
     player.setBodySize(20, 40)
 }
 function rightArrow(){
@@ -277,7 +332,9 @@ function walkStop(){
     walkSound.stop()
     isWalking=false
     player.setVelocityX(0)
-    player.body.touching.down?player.anims.play('idle', true):player.anims.play('jump', false)
+    player.body.touching.down?
+        player.anims.play('idle', true):
+            player.anims.play('jump', false)
 }
 //---------------------------Other Functions------------------------------------------//
 function muteGame(){
