@@ -121,13 +121,8 @@ function create (){
     //=====================================================================
                 //Arrow Buttons will show up only if its a touchable device
                 //otherwise player can use keyboard arrows
-    game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT
-    
     if (game.device.input.touch){ touchable=true }
     if (touchable){
-        
-        game.scale.startFullScreen(false)
-        
         leftBtn = this.add.image(40, 500, 'arrowBtn')
         leftBtn.alpha = 0.6
         leftBtn.angle = -90
