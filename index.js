@@ -33,6 +33,10 @@ const config = {
             debug: false
             },
         },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     scene: {
         preload: preload,
         create: create,
@@ -51,6 +55,7 @@ function preload (){
     this.load.image('bomb', './assets/bomb.png')
     this.load.image('muteBtn', './assets/sound.png')
     this.load.image('restartBtn', './assets/restart.png')
+    this.load.image('fScreenBtn', './assets/fullScreen.png')
     this.load.image('arrowBtn', './assets/arrowUp.png')
 //------------------------------------
     this.load.atlas('cutie','./assets/cutie_red_hed.png',
@@ -114,14 +119,20 @@ function create (){
     restartBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     restartBtn.on('pointerdown', restartGame)
 
-    soundBtn = this.add.image(750, 565, 'muteBtn')
-    soundBtn.alpha = 0.5
+    fullScrBtn = this.add.image(930, 30, 'fScreenBtn')
+    fullScrBtn.alpha = 0.4
+    fullScrBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
+    fullScrBtn.on('pointerup', setFullScreen)
+
+    soundBtn = this.add.image(730, 565, 'muteBtn')
+    soundBtn.alpha = 0.6
     soundBtn.setInteractive({ cursor: 'url(assets/hand.png), pointer' })
     soundBtn.on('pointerdown', muteGame)
     //=====================================================================
                 //Arrow Buttons will show up only if its a touchable device
                 //otherwise player can use keyboard arrows
-    if (game.device.input.touch){ touchable=true }
+    if (game.device.input.touch){
+        touchable=true }
     if (touchable){
         leftBtn = this.add.image(40, 500, 'arrowBtn')
         leftBtn.alpha = 0.6
@@ -303,7 +314,7 @@ function update (){
 //--------------------------Control Functions---------------------------------------------//
 function leftArrow(){
     player.setVelocityX(-180)
-    if (player.body.touching.down&&!isWalking){
+    if (player.body.touching.down && !isWalking){
         walkSound.play()
         isWalking=true}
     if (player.body.touching.down){player.anims.play('walk', true)}
@@ -313,7 +324,7 @@ function leftArrow(){
 }
 function rightArrow(){
     player.setVelocityX(180)
-    if (player.body.touching.down&&!isWalking){
+    if (player.body.touching.down && !isWalking){
         walkSound.play()
         isWalking=true}
     if (player.body.touching.down){player.anims.play('walk', true)}
@@ -428,3 +439,15 @@ function hitBomb (player, bomb){
     })
 }
     
+function setFullScreen(){
+    if (game.scale.isFullscreen)
+    {
+        fullScrBtn.alpha = 0.4
+        game.scale.stopFullscreen()
+    }
+    else
+    {
+        fullScrBtn.alpha = 0.7
+        game.scale.startFullscreen()
+    }
+}
