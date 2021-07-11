@@ -123,6 +123,8 @@ function create (){
                 //otherwise player can use keyboard arrows
     if (game.device.input.touch){ touchable=true }
     if (touchable){
+        game.scale.startFullScreen()
+        
         leftBtn = this.add.image(40, 500, 'arrowBtn')
         leftBtn.alpha = 0.6
         leftBtn.angle = -90
