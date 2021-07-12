@@ -10,8 +10,7 @@ let gameOver = false
 let isWalking = false
 
 const bodySize = (20, 30)
-const bodySizehq = (80, 100)
-
+const bodySizehq = (80, 90)
 const localKey = 'helloPhaser'
 const playerXkey = 350
 const playerYkey = 450
@@ -116,13 +115,13 @@ function create (){
     walkSound = this.sound.add('walkSound',{
         mute: false,
         volume: 0.5,
-        rate: 1.5,
+        rate: 2,
         loop: true
     })
     audioGameOver = this.sound.add('audioGameOver',{
         mute: false,
         volume: 0.8,
-        rate: 2,
+        rate: 1.5,
         loop: false
     })
     audioPickStar = this.sound.add('audioPickStar',{
@@ -133,7 +132,7 @@ function create (){
     })
     bombCollide = this.sound.add('bombCollide',{
         mute: false,
-        volume: 5,
+        volume: 4,
         rate: 1.5,
         loop: false
     })
@@ -433,14 +432,16 @@ function muteGame(){
     muted?(
         soundBtn.alpha = 0.5,
         walkSound.mute=false,
-        pickStar.mute=false,
-        pickStar.mute=false,
+        audioPickStar.mute=false,
+        audioGameOver.mute=false,
+        audioHit.mute=false,
         bombCollide.mute=false,
         muted=false):(
         soundBtn.alpha = 1,
         walkSound.mute=true,
-        pickStar.mute=true,
-        pickStar.mute=true,
+        audioPickStar.mute=true,
+        audioGameOver.mute=true,
+        audioHit.mute=true,
         bombCollide.mute=true,
         muted=true)
 }
