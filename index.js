@@ -4,9 +4,13 @@ let highScore
 let scoreText
 let liveText
 let highScoreText
+let highQuality = false
 let muted = false
 let gameOver = false
 let isWalking = false
+
+const bodySize = (20, 30)
+const bodySizehq = (80, 100)
 
 const localKey = 'helloPhaser'
 const playerXkey = 350
@@ -58,14 +62,24 @@ function preload (){
     this.load.image('fScreenBtn', './assets/fullScreen.png')
     this.load.image('arrowBtn', './assets/arrowUp.png')
 //------------------------------------
-    this.load.atlas('cutie','./assets/cutie_red_hed.png',
-        './assets/cutie_red_hed_atlas.json')
     this.load.atlas('kboom','./assets/kaboom.png',
         './assets/kaboom_atlas.json')
+//----if the device size is bigger than 1k we load HQ girl
+//------------------------------------------------------------
+if(window.screen.width > 1000){
+    highQuality = true
+    this.load.atlas('cutie','./assets/red_hair_hq.png',
+        './assets/red_hair_hq_atlas.json')
+} else {
+    this.load.atlas('cutie','./assets/cutie_red_hed.png',
+        './assets/cutie_red_hed_atlas.json')
+}
 //--------------Sounds---------------------
     this.load.audio('walkSound', './assets/cute-walk.mp3')
-    this.load.audio('pickStar', './assets/star.mp3')
+    this.load.audio('audioPickStar', './assets/star.mp3')
+    this.load.audio('audioGameOver', './assets/gameOver.mp3')
     this.load.audio('bombCollide', './assets/bomb.mp3')
+    this.load.audio('audioHit', './assets/hit.mp3')
 }
 
 
@@ -93,13 +107,25 @@ function create (){
     platforms.create(800, 225, 'platform')
 
 //--------------------sounds----------------------------
-    walkSound = this.sound.add('walkSound',{
+    audioHit = this.sound.add('audioHit',{
         mute: false,
         volume: 0.5,
         rate: 0.7,
+        loop: false
+    })
+    walkSound = this.sound.add('walkSound',{
+        mute: false,
+        volume: 0.5,
+        rate: 1.5,
         loop: true
     })
-    pickStar = this.sound.add('pickStar',{
+    audioGameOver = this.sound.add('audioGameOver',{
+        mute: false,
+        volume: 0.8,
+        rate: 2,
+        loop: false
+    })
+    audioPickStar = this.sound.add('audioPickStar',{
         mute: false,
         volume: 0.8,
         rate: 2,
@@ -132,8 +158,9 @@ function create (){
                 //Arrow Buttons will show up only if its a touchable device
                 //otherwise player can use keyboard arrows
     if (game.device.input.touch){
-        touchable=true }
-    if (touchable){
+        touchable=true
+        game.scene.game.input.addPointer(3)
+
         leftBtn = this.add.image(40, 500, 'arrowBtn')
         leftBtn.alpha = 0.6
         leftBtn.angle = -90
@@ -164,16 +191,65 @@ function create (){
     }else{
             // keyboard imputs
         cursors = this.input.keyboard.createCursorKeys()
+        console.log(this.input.keyboard.key)
     }
     //----------------player------------------------
     player = this.physics.add.sprite(playerXkey, playerYkey, 'cutie')
+    highQuality ? player.scale = 0.3 : player.scale = 1.5
     player.setBounce(0.3)
     player.setGravityY(350)
     player.setDepth(1)
-    player.setBodySize(20, 40)
     player.setCollideWorldBounds(true)
 
     // player animations
+    if (highQuality){
+        this.anims.create({
+            key: "idle",
+            frameRate: 24,
+            frames: this.anims.generateFrameNames("cutie", {
+                prefix: "idle_(",
+                suffix: ")",
+                start: 1,
+                end: 16,
+                zeroPad: 1,
+                repeat: -1
+            })
+        })
+        this.anims.create({
+            key: "walk",
+            frameRate: 24,
+            frames: this.anims.generateFrameNames("cutie", {
+                prefix: "walk_(",
+                suffix: ")",
+                start: 1,
+                end: 19,
+                zeroPad: 1,
+                repeat: -1
+            })
+        })
+        this.anims.create({
+            key: "dead",
+            frameRate: 12,
+            frames: this.anims.generateFrameNames("cutie", {
+                prefix: "dead_(",
+                suffix: ")",
+                start: 1,
+                end: 30,
+                zeroPad: 1
+            })
+        })
+        this.anims.create({
+            key: "jump",
+            frameRate: 12,
+            frames: this.anims.generateFrameNames("cutie", {
+                prefix: "jump_(",
+                suffix: ")",
+                start: 1,
+                end: 29,
+                zeroPad: 1
+            })
+        })
+    }else{
     this.anims.create({
         key: "idle",
         frameRate: 7,
@@ -216,6 +292,8 @@ function create (){
             zeroPad: 1
         })
     })
+}
+
     this.physics.add.collider(player, platforms)
 
 
@@ -276,6 +354,10 @@ function update (){
         isWalking=false
         return
     }
+    
+    //fixing the player colider
+    highQuality?player.setBodySize(bodySizehq) : player.setBodySize(bodySize)
+
     if (!touchable){
         if (cursors.left.isDown) {left=true}
         if (cursors.left.isUp) {left=false}
@@ -302,7 +384,8 @@ function update (){
         down?downBtn.alpha = 1:downBtn.alpha = 0.6
     }
     
-    if (player.y >= 580){
+    if (player.y >= 565){
+        audioHit.play()
         checkPlayerLife(-1)
         if (lives > 0) {
             player.x=playerXkey
@@ -319,8 +402,6 @@ function leftArrow(){
         isWalking=true}
     if (player.body.touching.down){player.anims.play('walk', true)}
     player.setFlipX(true)
-    //fixing the colider
-    player.setBodySize(20, 40)
 }
 function rightArrow(){
     player.setVelocityX(180)
@@ -382,7 +463,7 @@ function restartGame(){
 
 function collectStar (player, star){
     star.disableBody(true, true)
-    pickStar.play()
+    audioPickStar.play()
     score ++
     scoreText.setText('Score: ' + score)
     if(highScore<score){
@@ -407,6 +488,7 @@ function checkPlayerLife(setLife){
     liveText.setText('Lives: ' + lives)
     if (lives<0){lives=0}
     if (lives == 0){
+        audioGameOver.play()
         if (highScore>localStorage.getItem('helloPhaser')){
         localStorage.setItem('helloPhaser', highScore)}
         this.player.anims.play('dead',false)
@@ -438,7 +520,7 @@ function hitBomb (player, bomb){
         loop: false
     })
 }
-    
+
 function setFullScreen(){
     if (game.scale.isFullscreen)
     {
