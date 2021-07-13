@@ -89,10 +89,9 @@ function create (){
     // then we will create one
     if(!localStorage.getItem(localKey)) {
         localStorage.setItem(localKey, 0)
-      } else {
-          //if there is one then well use it ;)
-        highScore = localStorage.getItem(localKey)
       }
+          //if there is one then well use it ;)
+    highScore = localStorage.getItem(localKey)
 
       //-----------change the cursor... just for fun
     this.input.setDefaultCursor('url(assets/arrow.png), pointer')
@@ -190,7 +189,6 @@ function create (){
     }else{
             // keyboard imputs
         cursors = this.input.keyboard.createCursorKeys()
-        console.log(this.input.keyboard.key)
     }
     //----------------player------------------------
     player = this.physics.add.sprite(playerXkey, playerYkey, 'cutie')
