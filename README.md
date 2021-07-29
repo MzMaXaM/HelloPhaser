@@ -21,3 +21,8 @@ MzMaXaM
 ## Version History
 
 1.1 - July 2021
+
+### Mobile phones\iPads
+![](https://github.com/MzMaXaM/HelloPhaser/blob/acdb7f87984698827c462321a6741f5db7b287e1/helloPhaser%20Ipad.png)
+### Laptops\PCs
+![](https://github.com/MzMaXaM/HelloPhaser/blob/acdb7f87984698827c462321a6741f5db7b287e1/helloPhaser%20PC.png)
